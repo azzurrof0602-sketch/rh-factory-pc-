@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>产品卡片生成器</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#E8E8E8; font-family:'Barlow',sans-serif; min-height:100vh; display:flex; flex-direction:column; }
+
+.topbar { background:#111; height:52px; display:flex; align-items:center; padding:0 32px; flex-shrink:0; }
+.brand { font-family:'Barlow Condensed',sans-serif; color:white; font-size:17px; font-weight:700; letter-spacing:.15em; text-transform:uppercase; }
+
+.workspace { display:grid; grid-template-columns:360px 1fr; flex:1; height:calc(100vh - 52px); }
+
+/* ── LEFT ── */
+.left-panel { background:#FAFAFA; border-right:1px solid #E0E0E0; padding:20px 18px; overflow-y:auto; display:flex; flex-direction:column; gap:16px; }
+.panel-title { font-family:'Barlow Condensed',sans-serif; font-size:9px; font-weight:700; letter-spacing:.22em; text-transform:uppercase; color:#AAAAAA; margin-bottom:8px; }
+.sect { border-top:1px solid #EBEBEB; padding-top:14px; }
+
+/* Upload */
+.upload-zone { border:1.5px dashed #CCC; padding:20px 12px; text-align:center; cursor:pointer; background:white; transition:all .15s; position:relative; overflow:hidden; }
+.upload-zone:hover,.upload-zone.over { border-color:#111; }
+.upload-zone.has-img { padding:0; height:150px; }
+.upload-zone.has-img img { width:100%; height:100%; object-fit:cover; display:block; }
+.upload-overlay { position:absolute; inset:0; background:rgba(0,0,0,.6); display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; transition:opacity .15s; color:white; font-size:11px; gap:5px; }
+.upload-zone.has-img:hover .upload-overlay { opacity:1; }
+.upload-hint { font-size:11px; color:#BBB; margin:5px 0 10px; }
+.btn-pick { background:#111; color:white; border:none; padding:7px 18px; font-size:10px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; font-family:'Barlow',sans-serif; }
+input[type=file] { display:none; }
+
+/* Fields */
+.field { display:flex; flex-direction:column; gap:3px; }
+.field label { font-size:9px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:#AAAAAA; }
+.field input,.field textarea { background:white; border:1px solid #E0E0E0; padding:7px 10px; font-family:'Barlow',sans-serif; font-size:13px; color:#111; outline:none; transition:border-color .15s; width:100%; }
+.field input:focus,.field textarea:focus { border-color:#111; }
+.field textarea { resize:none; height:60px; line-height:1.6; }
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+
+/* ── COLOR CONTROLS ── */
+.color-group { display:flex; flex-direction:column; gap:10px; }
+
+.color-row-label {
+  font-size:9px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#BBB; margin-bottom:4px;
+}
+
+.chip-row { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+
+.chip {
+  width:22px; height:22px; border-radius:50%; cursor:pointer; flex-shrink:0;
+  outline:2px solid transparent; outline-offset:2px;
+  transition:transform .1s, outline-color .1s;
+  border:1px solid rgba(0,0,0,0.08);
+}
+.chip:hover { transform:scale(1.18); }
+.chip.active { outline-color:#333; }
+
+.color-custom-row { display:flex; align-items:center; gap:6px; margin-top:4px; }
+.color-custom-row label { font-size:9px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:#BBB; white-space:nowrap; }
+input[type=color] { width:28px; height:22px; border:1px solid #DDD; padding:1px 2px; cursor:pointer; background:white; border-radius:2px; }
+.hex-val { font-size:10px; color:#AAA; letter-spacing:.04em; font-family:monospace; }
+
+/* Style picker */
+.style-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+.style-opt { border:1.5px solid #E0E0E0; padding:9px 8px; text-align:center; cursor:pointer; transition:all .12s; background:white; }
+.style-opt:hover { border-color:#888; }
+.style-opt.active { border-color:#111; background:#111; }
+.style-opt .sname { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; color:#111; text-transform:uppercase; }
+.style-opt.active .sname { color:white; }
+.style-opt .stag { font-size:9px; color:#AAA; margin-top:1px; }
+.style-opt.active .stag { color:#777; }
+
+.btn-export { width:100%; background:#111; color:white; border:none; padding:13px; font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; cursor:pointer; }
+.btn-export:hover { opacity:.8; }
+
+/* ── RIGHT ── */
+.right-panel { display:flex; align-items:center; justify-content:center; padding:40px; background:#D5D5D5; overflow:auto; }
+.card-wrap { display:flex; flex-direction:column; align-items:center; gap:10px; }
+.card-wrap > p { font-size:10px; color:#AAA; letter-spacing:.15em; text-transform:uppercase; }
+
+/* ════ CARDS 450×600 ════ */
+.product-card { width:450px; height:600px; background:white; position:relative; overflow:hidden; flex-shrink:0; font-family:'Barlow',sans-serif; }
+
+/* ── A: Vertical ── */
+.card-a { display:grid; grid-template-columns:130px 1fr; grid-template-rows:1fr 130px; border:1px solid #E0E0E0; }
+.card-a .a-left { grid-row:1; border-right:1px solid #EBEBEB; display:flex; flex-direction:column; justify-content:flex-end; padding:0 0 20px 16px; overflow:hidden; }
+.card-a .a-bigtitle { font-family:'Barlow Condensed',sans-serif; font-size:60px; font-weight:900; line-height:.88; letter-spacing:-2px; writing-mode:vertical-rl; text-orientation:mixed; transform:rotate(180deg); }
+.card-a .a-img { grid-row:1; grid-column:2; background:#F5F5F5; overflow:hidden; }
+.card-a .a-img img { width:100%; height:100%; object-fit:cover; display:block; }
+.card-a .a-img-ph { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#CCC; font-size:11px; }
+.card-a .a-bottom { grid-column:1/-1; border-top:1px solid #EBEBEB; display:grid; grid-template-columns:130px 1fr 110px; }
+.card-a .a-bottom > div { padding:13px 15px; }
+.card-a .a-bottom > div+div { border-left:1px solid #EBEBEB; }
+.a-lbl { font-size:8px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:#C8C8C8; margin-bottom:4px; }
+.a-namecn { font-family:'Noto Sans SC',sans-serif; font-size:14px; font-weight:500; }
+.a-nameen { font-size:10px; font-style:italic; margin-top:2px; }
+.a-desc { font-size:10px; line-height:1.75; }
+.a-price { font-family:'Barlow Condensed',sans-serif; font-size:32px; font-weight:900; line-height:1; }
+.a-size { font-size:10px; line-height:1.7; margin-top:5px; }
+
+/* ── B: Split ── */
+.card-b { border:1px solid #E0E0E0; display:flex; flex-direction:column; }
+.card-b .b-header { display:grid; grid-template-columns:1fr auto; border-bottom:1px solid #EBEBEB; padding:15px 20px; align-items:center; gap:10px; }
+.card-b .bh-brand { font-family:'Barlow Condensed',sans-serif; font-size:44px; font-weight:900; line-height:1; }
+.card-b .bh-price { font-family:'Barlow Condensed',sans-serif; font-size:30px; font-weight:800; white-space:nowrap; }
+.card-b .b-body { display:grid; grid-template-columns:1fr 1fr; flex:1; min-height:0; }
+.card-b .b-img { background:#F5F5F5; border-right:1px solid #EBEBEB; overflow:hidden; }
+.card-b .b-img img { width:100%; height:100%; object-fit:cover; display:block; }
+.card-b .b-img-ph { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#CCC; font-size:11px; }
+.card-b .b-info { padding:18px 15px; display:flex; flex-direction:column; gap:11px; overflow:hidden; }
+.card-b .bi-name-cn { font-family:'Noto Sans SC',sans-serif; font-size:16px; font-weight:500; }
+.card-b .bi-name-en { font-size:11px; font-style:italic; margin-top:2px; }
+.card-b .bi-lbl { font-size:8px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:#C8C8C8; margin-bottom:3px; }
+.card-b .bi-desc { font-size:10px; line-height:1.75; }
+.card-b .bi-size { font-size:10px; line-height:1.8; }
+.card-b .b-footer { border-top:1px solid #EBEBEB; padding:9px 20px; display:flex; justify-content:space-between; align-items:center; }
+.card-b .bf-cat { font-size:8px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; }
+.card-b .bf-web { font-size:8px; letter-spacing:.1em; text-transform:uppercase; }
+
+/* ── C: Full Bleed ── */
+.card-c { border:1px solid #E0E0E0; display:flex; flex-direction:column; }
+.card-c .c-img { height:320px; flex-shrink:0; background:#F2F2F2; overflow:hidden; position:relative; }
+.card-c .c-img img { width:100%; height:100%; object-fit:cover; display:block; }
+.card-c .c-img-ph { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#CCC; font-size:11px; }
+.card-c .c-tag { position:absolute; top:0; left:0; padding:7px 14px; font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; }
+.card-c .c-panel { background:white; flex:1; display:flex; flex-direction:column; }
+.card-c .c-top { display:grid; grid-template-columns:1fr auto; align-items:flex-start; padding:15px 20px 11px; border-bottom:1px solid #EEE; gap:10px; }
+.card-c .ct-brand { font-size:9px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; margin-bottom:5px; }
+.card-c .ct-name-cn { font-family:'Noto Sans SC',sans-serif; font-size:18px; font-weight:500; }
+.card-c .ct-name-en { font-size:11px; font-style:italic; margin-top:2px; }
+.card-c .ct-price { font-family:'Barlow Condensed',sans-serif; font-size:38px; font-weight:900; line-height:1; white-space:nowrap; }
+.card-c .c-bottom { display:grid; flex:1; }
+.card-c .c-bottom.has-both { grid-template-columns:1fr 1px 110px; }
+.card-c .c-bottom.only-desc,.card-c .c-bottom.only-size { grid-template-columns:1fr; }
+.card-c .cb-desc { padding:12px 20px; font-size:10px; line-height:1.8; }
+.card-c .cb-div { background:#EEE; }
+.card-c .cb-size { padding:12px 14px; font-size:10px; line-height:1.9; }
+.card-c .cb-size-lbl { font-size:8px; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:#C8C8C8; margin-bottom:3px; }
+
+/* ── D: Grid ── */
+.card-d { border:1px solid #E0E0E0; display:grid; grid-template-columns:85px 1fr 115px; grid-template-rows:1fr 115px; }
+.card-d .d-left { grid-row:1; border-right:1px solid #EBEBEB; display:flex; flex-direction:column; justify-content:space-between; padding:18px 12px; overflow:hidden; }
+.card-d .d-big { font-family:'Barlow Condensed',sans-serif; font-size:68px; font-weight:900; line-height:.85; letter-spacing:-3px; writing-mode:vertical-rl; transform:rotate(180deg); opacity:.12; }
+.card-d .d-num { font-size:9px; color:#CCC; letter-spacing:.1em; }
+.card-d .d-img { grid-row:1; grid-column:2; background:#F5F5F5; overflow:hidden; }
+.card-d .d-img img { width:100%; height:100%; object-fit:cover; display:block; }
+.card-d .d-img-ph { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#CCC; font-size:11px; }
+.card-d .d-right { grid-row:1; grid-column:3; border-left:1px solid #EBEBEB; padding:18px 12px; display:flex; flex-direction:column; gap:10px; }
+.card-d .dr-lbl { font-size:8px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:#C0C0C0; }
+.card-d .dr-name-cn { font-family:'Noto Sans SC',sans-serif; font-size:13px; font-weight:500; line-height:1.3; }
+.card-d .dr-name-en { font-size:9px; font-style:italic; }
+.card-d .dr-size { font-size:9px; line-height:1.9; }
+.card-d .dr-price { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:900; line-height:1; margin-top:auto; }
+.card-d .d-footer { grid-column:1/-1; border-top:1px solid #EBEBEB; display:grid; }
+.card-d .d-footer.cols-3 { grid-template-columns:85px 1fr 115px; }
+.card-d .d-footer.cols-2 { grid-template-columns:1fr 1fr; }
+.card-d .d-footer.cols-1 { grid-template-columns:1fr; }
+.card-d .df-cell { padding:11px 12px; font-size:10px; line-height:1.7; overflow:hidden; }
+.card-d .df-cell+.df-cell { border-left:1px solid #EBEBEB; }
+.card-d .df-lbl { font-size:8px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:#C0C0C0; margin-bottom:3px; }
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#111; color:white; padding:10px 24px; font-size:12px; letter-spacing:.06em; opacity:0; transition:opacity .25s; pointer-events:none; z-index:999; }
+.toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="brand">Product Card Maker</div></div>
+
+<div class="workspace">
+  <!-- LEFT -->
+  <div class="left-panel">
+
+    <!-- Image -->
+    <div>
+      <div class="panel-title">Product Image</div>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('imgInput').click()">
+        <input type="file" id="imgInput" accept="image/*" onchange="handleImg(event)">
+        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="#CCC" stroke-width="1.2" style="display:block;margin:0 auto 4px">
+          <rect x="1" y="4" width="28" height="22" rx="1.5"/><circle cx="10" cy="12" r="2.5"/><path d="M1 23l7-7 5 5 6-7 11 9"/>
+        </svg>
+        <div class="upload-hint">拖拽或点击上传</div>
+        <button class="btn-pick" onclick="event.stopPropagation()">选择图片</button>
+        <div class="upload-overlay">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.5"><path d="M8 2v12M2 8l6-6 6 6"/></svg>更换图片
+        </div>
+      </div>
+    </div>
+
+    <!-- Fields -->
+    <div class="sect">
+      <div class="panel-title">产品信息</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="row2">
+          <div class="field"><label>Brand</label><input id="fBrand" placeholder="BRAND." oninput="updateCard()"></div>
+          <div class="field"><label>Category</label><input id="fCat" placeholder="Furniture" oninput="updateCard()"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>中文名称</label><input id="fNameCn" placeholder="产品名称" oninput="updateCard()"></div>
+          <div class="field"><label>English Name</label><input id="fNameEn" placeholder="Product Name" oninput="updateCard()"></div>
+        </div>
+        <div class="field"><label>介绍 About</label><textarea id="fDesc" placeholder="材质、工艺..." oninput="updateCard()"></textarea></div>
+        <div class="row2">
+          <div class="field"><label>尺寸 Size</label><input id="fSize" placeholder="W50×D50×H55" oninput="updateCard()"></div>
+          <div class="field"><label>价格 Price</label><input id="fPrice" placeholder="¥3,800" oninput="updateCard()"></div>
+        </div>
+        <div class="field"><label>网址 Website</label><input id="fWeb" placeholder="www.example.com" oninput="updateCard()"></div>
+      </div>
+    </div>
+
+    <!-- COLORS: two separate controls -->
+    <div class="sect">
+      <div class="panel-title">颜色设置</div>
+      <div class="color-group">
+
+        <!-- Accent color -->
+        <div>
+          <div class="color-row-label">主题色 · 背景色块 / 标签 / 边框装饰</div>
+          <div class="chip-row" id="accentChips"></div>
+          <div class="color-custom-row">
+            <label>自定义</label>
+            <input type="color" id="accentCustom" value="#111111" oninput="setAccentCustom(this.value)">
+            <span class="hex-val" id="accentHex">#111111</span>
+          </div>
+        </div>
+
+        <!-- Text color -->
+        <div>
+          <div class="color-row-label">字体色 · 所有文字</div>
+          <div class="chip-row" id="textChips"></div>
+          <div class="color-custom-row">
+            <label>自定义</label>
+            <input type="color" id="textCustom" value="#111111" oninput="setTextCustom(this.value)">
+            <span class="hex-val" id="textHex">#111111</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Style -->
+    <div class="sect">
+      <div class="panel-title">版式</div>
+      <div class="style-grid">
+        <div class="style-opt active" onclick="setStyle('a',this)"><div class="sname">Vertical</div><div class="stag">竖排标题</div></div>
+        <div class="style-opt" onclick="setStyle('b',this)"><div class="sname">Split</div><div class="stag">左图右文</div></div>
+        <div class="style-opt" onclick="setStyle('c',this)"><div class="sname">Full Bleed</div><div class="stag">满版+底栏</div></div>
+        <div class="style-opt" onclick="setStyle('d',this)"><div class="sname">Grid</div><div class="stag">三栏网格</div></div>
+      </div>
+    </div>
+
+    <div><button class="btn-export" onclick="exportCard()">Export PNG ↓</button></div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-panel">
+    <div class="card-wrap">
+      <p>Preview · 3:4 · 450×600</p>
+      <div id="productCard" class="product-card"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let currentStyle = 'a';
+  let imgDataUrl   = null;
+  let accentColor  = '#111111';  // bg blocks / tags / borders / decorative elements only
+  let textColor    = '#111111';  // ALL text: names, price, brand, desc, size, web
+
+  // ── PRESET PALETTES ──
+  const accentPresets = ['#111111','#FFFFFF','#8B6914','#5B4A3A','#2D4A3E','#1B3A6B','#8B2020','#C4A882','#4A4A4A','#D4C5B0'];
+  const textPresets   = ['#111111','#333333','#555555','#888888','#FFFFFF','#8B6914','#1B3A6B','#2D4A3E','#8B2020','#5B4A3A'];
+
+  function buildChips(containerId, presets, currentVal, onClickFn) {
+    const row = document.getElementById(containerId);
+    row.innerHTML = '';
+    presets.forEach(c => {
+      const chip = document.createElement('div');
+      chip.className = 'chip' + (c.toLowerCase() === currentVal.toLowerCase() ? ' active' : '');
+      chip.style.background = c;
+      chip.onclick = () => { onClickFn(c); };
+      row.appendChild(chip);
+    });
+  }
+
+  function setAccent(val) {
+    accentColor = val;
+    document.getElementById('accentCustom').value = val;
+    document.getElementById('accentHex').textContent = val;
+    buildChips('accentChips', accentPresets, val, setAccent);
+    updateCard();
+  }
+  function setAccentCustom(val) {
+    accentColor = val;
+    document.getElementById('accentHex').textContent = val;
+    buildChips('accentChips', accentPresets, val, setAccent);
+    updateCard();
+  }
+
+  function setTextColor(val) {
+    textColor = val;
+    document.getElementById('textCustom').value = val;
+    document.getElementById('textHex').textContent = val;
+    buildChips('textChips', textPresets, val, setTextColor);
+    updateCard();
+  }
+  function setTextCustom(val) {
+    textColor = val;
+    document.getElementById('textHex').textContent = val;
+    buildChips('textChips', textPresets, val, setTextColor);
+    updateCard();
+  }
+
+  function isLight(hex) {
+    const c = hex.replace('#','');
+    const r = parseInt(c.slice(0,2),16), g = parseInt(c.slice(2,4),16), b = parseInt(c.slice(4,6),16);
+    return (r*299+g*587+b*114)/1000 > 140;
+  }
+
+  // ── UPLOAD ──
+  const uz = document.getElementById('uploadZone');
+  uz.addEventListener('dragover', e => { e.preventDefault(); uz.classList.add('over'); });
+  uz.addEventListener('dragleave', () => uz.classList.remove('over'));
+  uz.addEventListener('drop', e => {
+    e.preventDefault(); uz.classList.remove('over');
+    const f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith('image/')) loadImg(f);
+  });
+  function handleImg(e) { const f = e.target.files[0]; if (f) loadImg(f); }
+  function loadImg(file) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      imgDataUrl = ev.target.result;
+      uz.classList.add('has-img');
+      uz.innerHTML = `<img src="${imgDataUrl}" alt=""><div class="upload-overlay"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.5"><path d="M8 2v12M2 8l6-6 6 6"/></svg>更换图片</div><input type="file" id="imgInput" accept="image/*" onchange="handleImg(event)" style="display:none">`;
+      uz.onclick = () => document.getElementById('imgInput').click();
+      updateCard();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  const v = id => document.getElementById(id)?.value?.trim() || '';
+  function setStyle(s, el) {
+    currentStyle = s;
+    document.querySelectorAll('.style-opt').forEach(x => x.classList.remove('active'));
+    el.classList.add('active');
+    updateCard();
+  }
+
+  const ifVal = (val, html) => val ? html : '';
+  const szBrk = s => s.replace(/[×xX·]/g,'<br>');
+
+  function updateCard() {
+    const card = document.getElementById('productCard');
+    const ac = accentColor;
+    const tc = textColor;
+    // On-accent text color (for text sitting ON the accent bg)
+    const onAc = isLight(ac) ? '#111' : '#fff';
+    // Sub text = text color at reduced opacity — achieved via rgba conversion
+    const tcRgb = hexToRgb(tc);
+    const tcSub  = `rgba(${tcRgb},0.55)`;
+    const tcFaint= `rgba(${tcRgb},0.35)`;
+
+    const brand  = v('fBrand');
+    const cat    = v('fCat');
+    const nameCn = v('fNameCn');
+    const nameEn = v('fNameEn');
+    const desc   = v('fDesc');
+    const size   = v('fSize');
+    const price  = v('fPrice');
+    const web    = v('fWeb');
+    const bigWord = brand.replace(/[^A-Za-z\u4e00-\u9fa5]/g,'').slice(0,7).toUpperCase();
+
+    card.className = 'product-card';
+
+    // ── A ──
+    if (currentStyle === 'a') {
+      card.classList.add('card-a');
+      // bigWord is a ghost/watermark on accent bg — use onAc at low opacity (pure decoration)
+      card.innerHTML = `
+        <div class="a-left" style="background:${ac}">
+          ${bigWord ? `<div class="a-bigtitle" style="color:${onAc};opacity:0.13">${bigWord}</div>` : ''}
+        </div>
+        <div class="a-img">${imgDataUrl ? `<img src="${imgDataUrl}" alt="">` : '<div class="a-img-ph">Upload Image</div>'}</div>
+        <div class="a-bottom">
+          <div>
+            ${ifVal(brand,  `<div class="a-lbl">Brand</div><div class="a-namecn" style="color:${tc};font-size:11px;font-weight:600;opacity:0.6">${brand}</div>`)}
+            ${ifVal(nameCn, `<div class="a-namecn" style="color:${tc}">${nameCn}</div>`)}
+            ${ifVal(nameEn, `<div class="a-nameen" style="color:${tcSub}">${nameEn}</div>`)}
+          </div>
+          <div>
+            ${ifVal(desc, `<div class="a-desc" style="color:${tcSub}">${desc}</div>`)}
+          </div>
+          <div>
+            ${ifVal(price, `<div class="a-price" style="color:${tc}">${price}</div>`)}
+            ${ifVal(size,  `<div class="a-size"  style="color:${tcFaint}">${size}</div>`)}
+          </div>
+        </div>`;
+
+    // ── B ──
+    } else if (currentStyle === 'b') {
+      card.classList.add('card-b');
+      card.innerHTML = `
+        <div class="b-header">
+          ${ifVal(brand, `<div class="bh-brand" style="color:${tc}">${brand}</div>`)}
+          ${ifVal(price, `<div class="bh-price" style="color:${tc}">${price}</div>`)}
+        </div>
+        <div class="b-body">
+          <div class="b-img">${imgDataUrl ? `<img src="${imgDataUrl}" alt="">` : '<div class="b-img-ph">Upload Image</div>'}</div>
+          <div class="b-info">
+            <div>
+              ${ifVal(nameCn, `<div class="bi-name-cn" style="color:${tc}">${nameCn}</div>`)}
+              ${ifVal(nameEn, `<div class="bi-name-en" style="color:${tcSub}">${nameEn}</div>`)}
+            </div>
+            ${ifVal(desc, `<div><div class="bi-lbl">About</div><div class="bi-desc" style="color:${tcSub}">${desc}</div></div>`)}
+            ${ifVal(size, `<div><div class="bi-lbl">Size</div><div class="bi-size" style="color:${tcSub}">${szBrk(size)}</div></div>`)}
+          </div>
+        </div>
+        ${(cat||web) ? `<div class="b-footer">
+          ${ifVal(cat, `<div class="bf-cat" style="color:${tcSub}">${cat}</div>`)}
+          ${ifVal(web, `<div class="bf-web" style="color:${tcFaint}">${web}</div>`)}
+        </div>` : ''}`;
+
+    // ── C ──
+    } else if (currentStyle === 'c') {
+      card.classList.add('card-c');
+      const hasBoth = desc && size;
+      const bottomCls = hasBoth ? 'has-both' : (desc ? 'only-desc' : 'only-size');
+      card.innerHTML = `
+        <div class="c-img">
+          ${imgDataUrl ? `<img src="${imgDataUrl}" alt="">` : '<div class="c-img-ph">Upload Image</div>'}
+          ${ifVal(cat, `<div class="c-tag" style="background:${ac};color:${onAc}">${cat}</div>`)}
+        </div>
+        <div class="c-panel" style="border-top:2px solid ${ac}">
+          <div class="c-top">
+            <div>
+              ${ifVal(brand,  `<div class="ct-brand" style="color:${tc};opacity:0.45">${brand}</div>`)}
+              ${ifVal(nameCn, `<div class="ct-name-cn" style="color:${tc}">${nameCn}</div>`)}
+              ${ifVal(nameEn, `<div class="ct-name-en" style="color:${tcSub}">${nameEn}</div>`)}
+            </div>
+            ${ifVal(price, `<div class="ct-price" style="color:${tc}">${price}</div>`)}
+          </div>
+          ${(desc||size) ? `<div class="c-bottom ${bottomCls}">
+            ${ifVal(desc, `<div class="cb-desc" style="color:${tcSub}">${desc}</div>`)}
+            ${hasBoth ? `<div class="cb-div"></div>` : ''}
+            ${ifVal(size, `<div class="cb-size"><div class="cb-size-lbl">Size</div><span style="color:${tcSub}">${szBrk(size)}</span></div>`)}
+          </div>` : ''}
+        </div>`;
+
+    // ── D ──
+    } else if (currentStyle === 'd') {
+      card.classList.add('card-d');
+      // footer columns based on how many fields exist
+      const footerItems = [
+        brand  ? `<div class="df-cell"><div class="df-lbl">Brand</div><span style="color:${tcSub}">${brand}</span></div>` : '',
+        desc   ? `<div class="df-cell"><div class="df-lbl">About</div><span style="color:${tcSub}">${desc}</span></div>` : '',
+        web    ? `<div class="df-cell"><div class="df-lbl">Web</div><span style="color:${tcFaint}">${web}</span></div>` : ''
+      ].filter(Boolean);
+      const colsCls = footerItems.length === 3 ? 'cols-3' : footerItems.length === 2 ? 'cols-2' : footerItems.length === 1 ? 'cols-1' : 'cols-3';
+
+      card.innerHTML = `
+        <div class="d-left" style="background:${ac}">
+          ${bigWord ? `<div class="d-big" style="color:${onAc}">${bigWord}</div>` : '<div></div>'}
+          <div class="d-num" style="color:${onAc};opacity:.3">No.01</div>
+        </div>
+        <div class="d-img">${imgDataUrl ? `<img src="${imgDataUrl}" alt="">` : '<div class="d-img-ph">Upload Image</div>'}</div>
+        <div class="d-right">
+          <div>
+            ${ifVal(nameCn, `<div class="dr-name-cn" style="color:${tc}">${nameCn}</div>`)}
+            ${ifVal(nameEn, `<div class="dr-name-en" style="color:${tcSub}">${nameEn}</div>`)}
+          </div>
+          ${ifVal(size, `<div><div class="dr-lbl">Size</div><div class="dr-size" style="color:${tcSub}">${szBrk(size)}</div></div>`)}
+          ${ifVal(price, `<div class="dr-price" style="color:${tc}">${price}</div>`)}
+        </div>
+        ${footerItems.length ? `<div class="d-footer ${colsCls}">${footerItems.join('')}</div>` : ''}`;
+    }
+  }
+
+  function hexToRgb(hex) {
+    hex = hex.replace('#','');
+    if (hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+    const r = parseInt(hex.slice(0,2),16);
+    const g = parseInt(hex.slice(2,4),16);
+    const b = parseInt(hex.slice(4,6),16);
+    return `${r},${g},${b}`;
+  }
+
+  function exportCard() {
+    const card = document.getElementById('productCard');
+    showToast('Generating…');
+    html2canvas(card, { scale:3, useCORS:true, allowTaint:true, backgroundColor:'#FFFFFF', logging:false }).then(canvas => {
+      const a = document.createElement('a');
+      a.download = `${v('fNameCn') || 'product-card'}.png`;
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+      showToast('✓ 导出成功');
+    });
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // Init
+  buildChips('accentChips', accentPresets, accentColor, setAccent);
+  buildChips('textChips',   textPresets,   textColor,   setTextColor);
+  updateCard();
+</script>
+</body>
+</html>
