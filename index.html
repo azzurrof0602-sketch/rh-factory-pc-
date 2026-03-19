@@ -461,7 +461,7 @@ body {
   inset: 0;
   overflow: hidden;
   cursor: grab;
-  background: #EEEEEE;
+  background: var(--c-bg, #EEEEEE);
 }
 
 .card-image-wrapper:active {
@@ -716,7 +716,7 @@ body {
 .card-img-block {
   width: 100%;
   height: 100%;
-  background: #EEEEEE;
+  background: var(--c-bg, #EEEEEE);
   overflow: hidden;
 }
 
@@ -882,6 +882,14 @@ body {
   flex: 1;
   min-height: 0;
   position: relative;
+}
+
+/* Absolute fill so card-img-block reliably fills the flex parent */
+.lc-img .card-img-block {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .lc-cat-tag {
@@ -1314,11 +1322,11 @@ body.batch-active .batch-mode {
   <div class="topbar-sep"></div>
   <span class="topbar-sub" data-i18n="subtitle">产品卡片生成器 · 单卡 + 批量</span>
   <div class="topbar-mode">
-    <button class="lang-btn active" onclick="switchLanguage('zh')">中文</button>
-    <button class="lang-btn" onclick="switchLanguage('en')">English</button>
+    <button class="lang-btn active" onclick="switchLanguage('zh', this)">中文</button>
+    <button class="lang-btn" onclick="switchLanguage('en', this)">English</button>
     <div class="lang-sep"></div>
-    <button class="mode-btn active" onclick="switchMode('single')" data-i18n="singleMode">单卡模式</button>
-    <button class="mode-btn" onclick="switchMode('batch')" data-i18n="batchMode">批量模式</button>
+    <button class="mode-btn active" onclick="switchMode('single', this)" data-i18n="singleMode">单卡模式</button>
+    <button class="mode-btn" onclick="switchMode('batch', this)" data-i18n="batchMode">批量模式</button>
   </div>
 </div>
 
@@ -1440,10 +1448,10 @@ body.batch-active .batch-mode {
       <div class="sb-section">
         <span class="sb-label" data-i18n="cardSize">卡片尺寸</span>
         <div class="size-presets">
-          <button class="size-btn active" onclick="setCardSize(450, 600, '3:4')" data-i18n="sizeVertical">竖版 3:4</button>
-          <button class="size-btn" onclick="setCardSize(600, 600, '1:1')" data-i18n="sizeSquare">正方形 1:1</button>
-          <button class="size-btn" onclick="setCardSize(800, 450, '16:9')" data-i18n="sizeHorizontal">横版 16:9</button>
-          <button class="size-btn" onclick="setCardSize(1050, 450, '21:9')" data-i18n="sizeWide">宽屏 21:9</button>
+          <button class="size-btn active" onclick="setCardSize(450, 600, '3:4', this)" data-i18n="sizeVertical">竖版 3:4</button>
+          <button class="size-btn" onclick="setCardSize(600, 600, '1:1', this)" data-i18n="sizeSquare">正方形 1:1</button>
+          <button class="size-btn" onclick="setCardSize(800, 450, '16:9', this)" data-i18n="sizeHorizontal">横版 16:9</button>
+          <button class="size-btn" onclick="setCardSize(1050, 450, '21:9', this)" data-i18n="sizeWide">宽屏 21:9</button>
         </div>
         <div class="field-row" style="margin-top: 10px;">
           <div class="field">
@@ -1461,7 +1469,7 @@ body.batch-active .batch-mode {
         <span class="sb-label" data-i18n="imageEditor">图片编辑</span>
         <div class="image-controls">
           <div class="control-group">
-            <label class="control-label" data-i18n="zoom">缩放: <span id="zoomValue">100</span>%</label>
+            <label class="control-label"><span data-i18n="zoom">缩放</span>: <span id="zoomValue">100</span>%</label>
             <input type="range" id="zoomSlider" min="10" max="200" value="100" oninput="updateImageZoom(this.value)" class="slider">
           </div>
           
@@ -1628,6 +1636,7 @@ function initSwatches() {
       const el = document.createElement('div');
       el.className = 'swatch';
       el.style.background = hex;
+      el.dataset.hex = hex.toLowerCase();
       if (hex.toLowerCase() === state.colors[role].toLowerCase()) el.classList.add('on');
       el.onclick = () => setColor(role, hex);
       container.appendChild(el);
@@ -1635,11 +1644,11 @@ function initSwatches() {
   });
 }
 
-function switchMode(m) {
+function switchMode(m, btn) {
   state.mode = m;
   document.body.className = m === 'batch' ? 'batch-active' : 'single-active';
-  document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
   
   if (m === 'single') {
     document.querySelector('.preview-single').classList.add('active');
@@ -1656,7 +1665,7 @@ function setColor(role, hex) {
   document.getElementById('hex-' + role).textContent = hex.toUpperCase();
   const container = document.getElementById('sw-' + role);
   container.querySelectorAll('.swatch').forEach(s => {
-    s.classList.toggle('on', s.style.background.toLowerCase() === hex.toLowerCase());
+    s.classList.toggle('on', s.dataset.hex === hex.toLowerCase());
   });
   applyColors();
   render();
@@ -1724,7 +1733,7 @@ function applyColors() {
   const [r,g,b] = hexToComponents(text);
   card.style.setProperty('--c-text-sub',   `rgba(${r},${g},${b},0.65)`);
   card.style.setProperty('--c-text-faint', `rgba(${r},${g},${b},0.4)`);
-  card.style.setProperty('--c-on-accent', isLight(accent) ? '#FFFFFF' : '#2A2A2A');
+  card.style.setProperty('--c-on-accent', isLight(accent) ? '#2A2A2A' : '#FFFFFF');
 }
 
 function render() {
@@ -2249,7 +2258,7 @@ function batchGenerate() {
     const [r,g,b] = hexToComponents(state.colors.text);
     cardDiv.style.setProperty('--c-text-sub', `rgba(${r},${g},${b},0.65)`);
     cardDiv.style.setProperty('--c-text-faint', `rgba(${r},${g},${b},0.4)`);
-    cardDiv.style.setProperty('--c-on-accent', isLight(state.colors.accent) ? '#FFFFFF' : '#2A2A2A');
+    cardDiv.style.setProperty('--c-on-accent', isLight(state.colors.accent) ? '#2A2A2A' : '#FFFFFF');
     
     const imgFile = item['图片文件名'] || '';
     const imgSrc = state.batchImages[imgFile] || '';
@@ -2413,12 +2422,7 @@ function downloadAllCards(format = 'png') {
   });
 }
 
-function toast(msg) {
-  const t_msg = document.getElementById('toast');
-  t_msg.textContent = msg;
-  t_msg.classList.add('show');
-  setTimeout(() => t_msg.classList.remove('show'), 2200);
-}
+// toast defined below with i18n support
 
 function isLight(hex) {
   const [r,g,b] = hexToComponents(hex);
@@ -2440,17 +2444,15 @@ function hexToRgb(hex) {
 // 卡片尺寸和图片编辑函数
 // ═══════════════════════════════════════════
 
-function setCardSize(w, h, ratio) {
+function setCardSize(w, h, ratio, btn) {
   state.cardWidth = w;
   state.cardHeight = h;
   document.getElementById('f-card-width').value = w;
   document.getElementById('f-card-height').value = h;
   
   // 更新按钮状态
-  document.querySelectorAll('.size-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  event.target.classList.add('active');
+  document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
   
   // 更新卡片尺寸
   const card = document.getElementById('card');
@@ -2686,17 +2688,15 @@ const i18n = {
   }
 };
 
-let currentLanguage = localStorage.getItem('language') || 'zh';
+let currentLanguage = (() => { try { return localStorage.getItem('language') || 'zh'; } catch(e) { return 'zh'; } })();
 
-function switchLanguage(lang) {
+function switchLanguage(lang, btn) {
   currentLanguage = lang;
-  localStorage.setItem('language', lang);
+  try { localStorage.setItem('language', lang); } catch(e) {}
   
   // 更新语言按钮
-  document.querySelectorAll('.lang-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  event.target.classList.add('active');
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
   
   // 更新所有文本
   updateAllText();
@@ -2715,7 +2715,8 @@ function updateAllText() {
 
 function toast(messageKey, ...args) {
   const t_msg = document.getElementById('toast');
-  if (typeof messageKey === 'string' && messageKey.startsWith('✗') || messageKey.startsWith('✓')) {
+  if (!t_msg) return;
+  if (typeof messageKey === 'string' && (messageKey.startsWith('✗') || messageKey.startsWith('✓'))) {
     t_msg.textContent = messageKey;
   } else {
     t_msg.textContent = t(messageKey);
@@ -2724,8 +2725,18 @@ function toast(messageKey, ...args) {
   setTimeout(() => t_msg.classList.remove('show'), 2200);
 }
 
-// 初始化语言
-updateAllText();
+// 初始化
+function init() {
+  updateAllText();
+  initSwatches();
+  render();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 
 </script>
 </body>
