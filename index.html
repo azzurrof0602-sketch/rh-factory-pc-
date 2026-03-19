@@ -84,14 +84,21 @@ body {
   margin-left: auto;
   display: flex;
   gap: 12px;
+  align-items: center;
 }
 
-.mode-btn {
+.lang-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border-light);
+}
+
+.lang-btn, .mode-btn {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: .1em;
   text-transform: uppercase;
-  padding: 8px 16px;
+  padding: 8px 14px;
   background: var(--bg-light);
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
@@ -100,13 +107,13 @@ body {
   font-family: 'Barlow Condensed', sans-serif;
 }
 
-.mode-btn:hover {
+.lang-btn:hover, .mode-btn:hover {
   background: var(--bg-accent);
   border-color: var(--accent-color);
   color: var(--accent-color);
 }
 
-.mode-btn.active {
+.lang-btn.active, .mode-btn.active {
   background: var(--accent-color);
   color: white;
   border-color: var(--accent-color);
@@ -381,11 +388,92 @@ body {
   letter-spacing: .04em;
 }
 
-/* ─── Layout Grid ─── */
-.layout-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+.image-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.control-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.control-row label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.control-row input[type="range"] {
+  cursor: pointer;
+}
+
+.size-opt {
+  background: var(--bg-light);
+  border: 1.5px solid var(--border-color);
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+
+.size-opt:hover {
+  border-color: var(--accent-color);
+  background: var(--bg-accent);
+}
+
+.size-opt.active {
+  border-color: var(--accent-color);
+  background: var(--accent-light);
+}
+
+.size-opt .lo-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-primary);
+}
+
+.size-opt.active .lo-name {
+  color: var(--accent-color);
+}
+
+.size-opt .lo-tag {
+  font-size: 10px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+/* ─── Card Container ─── */
+.card-container {
+  position: relative;
+  width: 450px;
+  height: 600px;
+  margin: auto;
+}
+
+.card-image-wrapper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  background: #EEEEEE;
+}
+
+.card-image-wrapper:active {
+  cursor: grabbing;
+}
+
+.card-image-wrapper img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
 }
 
 .layout-opt {
@@ -1028,9 +1116,152 @@ body {
   color: var(--c-text-faint);
 }
 
-/* ─────────────────────────────
-   TOAST
-───────────────────────────── */
+/* ─── Size Presets ─── */
+.size-presets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.size-btn {
+  background: var(--bg-light);
+  border: 1.5px solid var(--border-color);
+  padding: 8px 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s ease;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
+.size-btn:hover {
+  border-color: var(--accent-color);
+  background: var(--bg-accent);
+}
+
+.size-btn.active {
+  border-color: var(--accent-color);
+  background: var(--accent-light);
+  color: var(--accent-color);
+}
+
+/* ─── Image Editor ─── */
+.image-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.control-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-light);
+}
+
+.slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-light);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: #7A6549;
+  transform: scale(1.2);
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  cursor: pointer;
+  border: none;
+  transition: all .2s;
+}
+
+.slider::-moz-range-thumb:hover {
+  background: #7A6549;
+  transform: scale(1.2);
+}
+
+.position-buttons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.pos-btn {
+  width: 32px;
+  height: 32px;
+  background: var(--bg-light);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all .2s ease;
+  border-radius: 2px;
+}
+
+.pos-btn:hover {
+  background: var(--bg-accent);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.pos-btn.active {
+  background: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+}
+
+.offset-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.offset-controls label {
+  min-width: 40px;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.offset-controls .slider {
+  flex: 1;
+}
+
+.offset-controls span {
+  min-width: 35px;
+  text-align: right;
+  color: var(--text-secondary);
+  font-size: 10px;
+}
 .toast {
   position: fixed;
   bottom: 24px;
@@ -1074,12 +1305,15 @@ body.batch-active .batch-mode {
 <body class="single-active">
 
 <div class="topbar">
-  <span class="topbar-title">Card Maker PRO</span>
+  <span class="topbar-title" data-i18n="title">Card Maker PRO</span>
   <div class="topbar-sep"></div>
-  <span class="topbar-sub">产品卡片生成器 · 单卡 + 批量</span>
+  <span class="topbar-sub" data-i18n="subtitle">产品卡片生成器 · 单卡 + 批量</span>
   <div class="topbar-mode">
-    <button class="mode-btn active" onclick="switchMode('single')">单卡模式</button>
-    <button class="mode-btn" onclick="switchMode('batch')">批量模式</button>
+    <button class="lang-btn active" onclick="switchLanguage('zh')">中文</button>
+    <button class="lang-btn" onclick="switchLanguage('en')">English</button>
+    <div class="lang-sep"></div>
+    <button class="mode-btn active" onclick="switchMode('single')" data-i18n="singleMode">单卡模式</button>
+    <button class="mode-btn" onclick="switchMode('batch')" data-i18n="batchMode">批量模式</button>
   </div>
 </div>
 
@@ -1177,7 +1411,7 @@ body.batch-active .batch-mode {
       </div>
 
       <div class="sb-section">
-        <span class="sb-label">版式</span>
+        <span class="sb-label" data-i18n="layout">版式</span>
         <div class="layout-grid">
           <div class="layout-opt active" id="lo-a" onclick="setLayout('a')">
             <div class="lo-name">Classic</div>
@@ -1195,6 +1429,63 @@ body.batch-active .batch-mode {
             <div class="lo-name">Grid</div>
             <div class="lo-tag">三栏网格</div>
           </div>
+        </div>
+      </div>
+
+      <div class="sb-section">
+        <span class="sb-label" data-i18n="cardSize">卡片尺寸</span>
+        <div class="size-presets">
+          <button class="size-btn active" onclick="setCardSize(450, 600, '3:4')" data-i18n="sizeVertical">竖版 3:4</button>
+          <button class="size-btn" onclick="setCardSize(600, 600, '1:1')" data-i18n="sizeSquare">正方形 1:1</button>
+          <button class="size-btn" onclick="setCardSize(800, 450, '16:9')" data-i18n="sizeHorizontal">横版 16:9</button>
+          <button class="size-btn" onclick="setCardSize(1050, 450, '21:9')" data-i18n="sizeWide">宽屏 21:9</button>
+        </div>
+        <div class="field-row" style="margin-top: 10px;">
+          <div class="field">
+            <span class="field-label" data-i18n="width">宽度</span>
+            <input id="f-card-width" type="number" value="450" min="200" max="1200" oninput="updateCustomSize()">
+          </div>
+          <div class="field">
+            <span class="field-label" data-i18n="height">高度</span>
+            <input id="f-card-height" type="number" value="600" min="200" max="1200" oninput="updateCustomSize()">
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-section" id="imageEditorSection">
+        <span class="sb-label" data-i18n="imageEditor">图片编辑</span>
+        <div class="image-controls">
+          <div class="control-group">
+            <label class="control-label" data-i18n="zoom">缩放: <span id="zoomValue">100</span>%</label>
+            <input type="range" id="zoomSlider" min="10" max="200" value="100" oninput="updateImageZoom(this.value)" class="slider">
+          </div>
+          
+          <div class="control-group">
+            <label class="control-label" data-i18n="position">位置</label>
+            <div class="position-buttons">
+              <button class="pos-btn" onclick="setImagePosition('top')" title="Top" data-i18n="top">↑</button>
+              <button class="pos-btn" onclick="setImagePosition('center')" title="Center" data-i18n="center">⊙</button>
+              <button class="pos-btn" onclick="setImagePosition('bottom')" title="Bottom" data-i18n="bottom">↓</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="offset-controls">
+              <label data-i18n="offsetX">横向</label>
+              <input type="range" id="offsetX" min="-200" max="200" value="0" oninput="updateImageOffset()" class="slider">
+              <span id="offsetXValue">0</span>px
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="offset-controls">
+              <label data-i18n="offsetY">纵向</label>
+              <input type="range" id="offsetY" min="-200" max="200" value="0" oninput="updateImageOffset()" class="slider">
+              <span id="offsetYValue">0</span>px
+            </div>
+          </div>
+
+          <button class="btn-batch" onclick="resetImageEditor()" style="margin-top: 8px;" data-i18n="resetImage">重置图片</button>
         </div>
       </div>
 
@@ -1306,6 +1597,14 @@ const state = {
     accent: '#2A2A2A',
     text:   '#2A2A2A',
   },
+  // 卡片尺寸
+  cardWidth: 450,
+  cardHeight: 600,
+  // 图片编辑
+  imageZoom: 100,
+  imageOffsetX: 0,
+  imageOffsetY: 0,
+  // 批量模式
   batchData: [],
   batchImages: {},
   cardElements: {},
@@ -1400,8 +1699,15 @@ const F = id => document.getElementById(id)?.value?.trim() || null;
 
 function imgBlock(cls='', src=null) {
   const imgSrc = src || state.img;
-  if (imgSrc) return `<div class="card-img-block ${cls}"><img src="${imgSrc}" alt=""></div>`;
-  return `<div class="card-img-block empty ${cls}">Upload Image</div>`;
+  if (!imgSrc) return `<div class="card-img-block empty ${cls}">Upload Image</div>`;
+  
+  // 应用缩放和位置变换
+  const zoomScale = state.imageZoom / 100;
+  const transformStyle = `transform: scale(${zoomScale}) translate(${state.imageOffsetX}px, ${state.imageOffsetY}px); transform-origin: center center;`;
+  
+  return `<div class="card-img-block ${cls}" style="display: flex; align-items: center; justify-content: center; overflow: hidden;">
+    <img src="${imgSrc}" alt="" style="${transformStyle} width: 100%; height: 100%; object-fit: cover;">
+  </div>`;
 }
 
 function applyColors() {
@@ -1419,6 +1725,11 @@ function applyColors() {
 function render() {
   const card = document.getElementById('card');
   card.className = 'layout-' + state.layout;
+  
+  // 应用卡片尺寸
+  card.style.width = state.cardWidth + 'px';
+  card.style.height = state.cardHeight + 'px';
+  
   applyColors();
 
   const brand  = F('f-brand');
@@ -2098,10 +2409,10 @@ function downloadAllCards(format = 'png') {
 }
 
 function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+  const t_msg = document.getElementById('toast');
+  t_msg.textContent = msg;
+  t_msg.classList.add('show');
+  setTimeout(() => t_msg.classList.remove('show'), 2200);
 }
 
 function isLight(hex) {
@@ -2120,9 +2431,297 @@ function hexToRgb(hex) {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-initSwatches();
-applyColors();
-render();
+// ═══════════════════════════════════════════
+// 卡片尺寸和图片编辑函数
+// ═══════════════════════════════════════════
+
+function setCardSize(w, h, ratio) {
+  state.cardWidth = w;
+  state.cardHeight = h;
+  document.getElementById('f-card-width').value = w;
+  document.getElementById('f-card-height').value = h;
+  
+  // 更新按钮状态
+  document.querySelectorAll('.size-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event.target.classList.add('active');
+  
+  // 更新卡片尺寸
+  const card = document.getElementById('card');
+  card.style.width = w + 'px';
+  card.style.height = h + 'px';
+  
+  render();
+}
+
+function updateCustomSize() {
+  const w = parseInt(document.getElementById('f-card-width').value) || 450;
+  const h = parseInt(document.getElementById('f-card-height').value) || 600;
+  
+  state.cardWidth = w;
+  state.cardHeight = h;
+  
+  const card = document.getElementById('card');
+  card.style.width = w + 'px';
+  card.style.height = h + 'px';
+  
+  // 移除预设按钮的 active 状态
+  document.querySelectorAll('.size-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  render();
+}
+
+function updateImageZoom(value) {
+  state.imageZoom = parseInt(value);
+  document.getElementById('zoomValue').textContent = value;
+  render();
+}
+
+function setImagePosition(pos) {
+  switch(pos) {
+    case 'top':
+      state.imageOffsetY = -150;
+      break;
+    case 'center':
+      state.imageOffsetY = 0;
+      break;
+    case 'bottom':
+      state.imageOffsetY = 150;
+      break;
+  }
+  document.getElementById('offsetY').value = state.imageOffsetY;
+  document.getElementById('offsetYValue').textContent = state.imageOffsetY;
+  render();
+}
+
+function updateImageOffset() {
+  state.imageOffsetX = parseInt(document.getElementById('offsetX').value) || 0;
+  state.imageOffsetY = parseInt(document.getElementById('offsetY').value) || 0;
+  document.getElementById('offsetXValue').textContent = state.imageOffsetX;
+  document.getElementById('offsetYValue').textContent = state.imageOffsetY;
+  render();
+}
+
+function resetImageEditor() {
+  state.imageZoom = 100;
+  state.imageOffsetX = 0;
+  state.imageOffsetY = 0;
+  
+  document.getElementById('zoomSlider').value = 100;
+  document.getElementById('zoomValue').textContent = '100';
+  document.getElementById('offsetX').value = 0;
+  document.getElementById('offsetXValue').textContent = '0';
+  document.getElementById('offsetY').value = 0;
+  document.getElementById('offsetYValue').textContent = '0';
+  
+  render();
+}
+
+// 修改 imgBlock 函数，添加缩放和位置控制
+function imgBlockWithTransform(cls='', src=null) {
+  const imgSrc = src || state.img;
+  const zoomScale = state.imageZoom / 100;
+  const transformStyle = `transform: scale(${zoomScale}) translate(${state.imageOffsetX}px, ${state.imageOffsetY}px); transform-origin: center center;`;
+  
+  if (imgSrc) return `<div class="card-img-block ${cls}" style="display: flex; align-items: center; justify-content: center; overflow: hidden;"><img src="${imgSrc}" alt="" style="${transformStyle} width: 100%; height: 100%; object-fit: cover;"></div>`;
+  return `<div class="card-img-block empty ${cls}">Upload Image</div>`;
+}
+
+const i18n = {
+  zh: {
+    title: 'Card Maker PRO',
+    subtitle: '产品卡片生成器 · 单卡 + 批量',
+    singleMode: '单卡模式',
+    batchMode: '批量模式',
+    productImage: '产品图片',
+    clickOrDrag: '点击或拖拽图片',
+    chooseImage: '选择图片',
+    changeImage: '更换图片',
+    productInfo: '产品信息',
+    brand: '品牌',
+    category: '类别',
+    cnName: '中文名称',
+    enName: 'English Name',
+    description: '产品介绍',
+    material: '材质、工艺、风格描述...',
+    size: '尺寸规格',
+    sizeExample: 'W50×D50×H55',
+    price: '价格',
+    priceExample: '¥3,800',
+    colors: '颜色',
+    backgroundColor: '卡片底色',
+    themeColor: '主题色 · 色块 / 标签 / 装饰线',
+    textColor: '文字色 · 所有文字',
+    layout: '版式',
+    export: '导出',
+    uploadCSV: '上传CSV',
+    clickUploadCSV: '📋 点击上传或拖拽 CSV 文件',
+    productList: '产品列表',
+    aiAPI: 'AI API 设置',
+    selectAPI: '选择 API',
+    apiKey: 'API Key',
+    pasteKey: '粘贴你的 API Key 这里',
+    keyWarning: '💡 仅保存在本地浏览器，不会上传服务器',
+    descLength: '简介字数',
+    generateDesc: '🤖 生成所有简介',
+    imageFolder: '图片文件夹',
+    clickSelectFolder: '📁 点击选择图片文件夹',
+    generateCards: '生成所有卡片',
+    downloadPNG: '📥 PNG',
+    downloadJPG: '📥 JPG',
+    generating: '正在生成…',
+    exported: '已导出',
+    noData: '✗ 没有产品数据',
+    noImages: '✗ 没有图片',
+    success: '✓',
+    error: '✗',
+    selectAPI_: '请选择 API',
+    inputKey: '请输入 API Key',
+    csvLoaded: 'CSV 已加载',
+    imagesLoaded: '已加载',
+    images: '张图片',
+    cardsGenerated: '批量卡片已生成',
+    exporting: '正在导出全部',
+    exported_cards: '已导出',
+    cards: '张',
+    // 新增：卡片尺寸和图片编辑
+    cardSize: '卡片尺寸',
+    sizeVertical: '竖版 3:4',
+    sizeSquare: '正方形 1:1',
+    sizeHorizontal: '横版 16:9',
+    sizeWide: '宽屏 21:9',
+    width: '宽度',
+    height: '高度',
+    imageEditor: '图片编辑',
+    zoom: '缩放',
+    position: '位置',
+    top: '↑ 上',
+    center: '⊙ 居中',
+    bottom: '↓ 下',
+    offsetX: '横向',
+    offsetY: '纵向',
+    resetImage: '重置图片',
+  },
+  en: {
+    title: 'Card Maker PRO',
+    subtitle: 'Product Card Generator · Single + Batch',
+    singleMode: 'Single Mode',
+    batchMode: 'Batch Mode',
+    productImage: 'Product Image',
+    clickOrDrag: 'Click or drag image',
+    chooseImage: 'Choose Image',
+    changeImage: 'Change Image',
+    productInfo: 'Product Information',
+    brand: 'Brand',
+    category: 'Category',
+    cnName: 'Chinese Name',
+    enName: 'English Name',
+    description: 'Product Description',
+    material: 'Material, craftsmanship, style description...',
+    size: 'Size & Specifications',
+    sizeExample: 'W50×D50×H55',
+    price: 'Price',
+    priceExample: '$1,999',
+    colors: 'Colors',
+    backgroundColor: 'Card Background',
+    themeColor: 'Theme Color · Blocks / Tags / Accents',
+    textColor: 'Text Color · All Text',
+    layout: 'Layout',
+    export: 'Export',
+    uploadCSV: 'Upload CSV',
+    clickUploadCSV: '📋 Click to upload or drag CSV file',
+    productList: 'Product List',
+    aiAPI: 'AI API Settings',
+    selectAPI: 'Select API',
+    apiKey: 'API Key',
+    pasteKey: 'Paste your API Key here',
+    keyWarning: '💡 Stored locally only, never uploaded',
+    descLength: 'Description Length',
+    generateDesc: '🤖 Generate All Descriptions',
+    imageFolder: 'Image Folder',
+    clickSelectFolder: '📁 Click to select image folder',
+    generateCards: 'Generate All Cards',
+    downloadPNG: '📥 PNG',
+    downloadJPG: '📥 JPG',
+    generating: 'Generating…',
+    exported: 'Exported',
+    noData: '✗ No product data',
+    noImages: '✗ No images',
+    success: '✓',
+    error: '✗',
+    selectAPI_: 'Please select an API',
+    inputKey: 'Please enter API Key',
+    csvLoaded: 'CSV loaded',
+    imagesLoaded: 'Loaded',
+    images: 'images',
+    cardsGenerated: 'Cards generated',
+    exporting: 'Exporting all',
+    exported_cards: 'Exported',
+    cards: 'cards',
+    // 新增：卡片尺寸和图片编辑
+    cardSize: 'Card Size',
+    sizeVertical: 'Vertical 3:4',
+    sizeSquare: 'Square 1:1',
+    sizeHorizontal: 'Horizontal 16:9',
+    sizeWide: 'Wide 21:9',
+    width: 'Width',
+    height: 'Height',
+    imageEditor: 'Image Editor',
+    zoom: 'Zoom',
+    position: 'Position',
+    top: '↑ Top',
+    center: '⊙ Center',
+    bottom: '↓ Bottom',
+    offsetX: 'Horizontal',
+    offsetY: 'Vertical',
+    resetImage: 'Reset Image',
+  }
+};
+
+let currentLanguage = localStorage.getItem('language') || 'zh';
+
+function switchLanguage(lang) {
+  currentLanguage = lang;
+  localStorage.setItem('language', lang);
+  
+  // 更新语言按钮
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event.target.classList.add('active');
+  
+  // 更新所有文本
+  updateAllText();
+}
+
+function t(key) {
+  return i18n[currentLanguage][key] || i18n['zh'][key] || key;
+}
+
+function updateAllText() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+}
+
+function toast(messageKey, ...args) {
+  const t_msg = document.getElementById('toast');
+  if (typeof messageKey === 'string' && messageKey.startsWith('✗') || messageKey.startsWith('✓')) {
+    t_msg.textContent = messageKey;
+  } else {
+    t_msg.textContent = t(messageKey);
+  }
+  t_msg.classList.add('show');
+  setTimeout(() => t_msg.classList.remove('show'), 2200);
+}
+
+// 初始化语言
+updateAllText();
+
 </script>
 </body>
 </html>
